@@ -233,13 +233,12 @@ class UIBuilder:
 
         /* Hero Sections */
         .hero {
-            min-height: 580px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 12px 22px 84px;
+            padding: 58px 22px 0;
             position: relative;
         }
 
@@ -295,12 +294,12 @@ class UIBuilder:
             height: auto;
         }
 
-        /* Buttons */
+        /* Buttons - Apple Style (outlined with blue text) */
         .btn {
             display: inline-block;
-            padding: 12px 24px;
+            padding: 8px 16px;
             border-radius: 980px;
-            font-size: 17px;
+            font-size: 14px;
             font-weight: 400;
             text-decoration: none;
             transition: all 0.3s ease;
@@ -309,6 +308,7 @@ class UIBuilder:
         .btn-primary {
             background-color: var(--apple-link-blue);
             color: white;
+            border: 1px solid var(--apple-link-blue);
         }
 
         .btn-primary:hover {
@@ -327,12 +327,14 @@ class UIBuilder:
         }
 
         .btn-primary-dark {
-            background-color: rgb(0, 113, 227);
-            color: white;
+            background-color: transparent;
+            color: rgb(0, 113, 227);
+            border: 1px solid rgb(0, 113, 227);
         }
 
         .btn-primary-dark:hover {
-            background-color: rgb(0, 102, 204);
+            background-color: rgb(0, 113, 227);
+            color: white;
         }
 
         .btn-secondary-dark {
@@ -650,9 +652,6 @@ export default {
                 <a href="#" class="btn btn-primary">Learn more</a>
                 <a href="#" class="btn btn-secondary">Buy</a>
             </div>
-        </div>
-        <div class="hero-image">
-            <img src="https://www.apple.com/v/iphone-17-pro/a/images/overview/hero/hero_endframe__bpjfx5sr0yqi_large.jpg" alt="iPhone 17 Pro" loading="lazy">
         </div>
     </section>
 

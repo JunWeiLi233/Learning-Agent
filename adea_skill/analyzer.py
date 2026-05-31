@@ -25,22 +25,37 @@ class ComponentPattern:
     children: List["ComponentPattern"] = field(default_factory=list)
 
 
+@dataclass
+class DesignPrinciple:
+    """Represents an extracted design principle."""
+    name: str
+    description: str
+    category: str  # hierarchy, consistency, contrast, etc.
+    examples: List[str] = field(default_factory=list)
+    application: str = ""  # How to apply this principle
+
+
 class DesignAnalyzer:
     """
-    Analyzes target website designs and extracts technical implementation details.
+    Analyzes target website designs and extracts the underlying design language.
 
-    Identifies:
-    - Color palettes and gradients
-    - Typography hierarchies
-    - Spacing and layout systems
-    - Component patterns
+    Instead of just copying pixels, this analyzer extracts:
+    - Design principles and philosophy
+    - Visual hierarchy patterns
+    - Consistency rules
+    - Component relationships
+    - Typography and color systems
+    - Spacing and layout logic
     - Animation behaviors
-    - Responsive breakpoints
+    - Responsive design patterns
+
+    The goal is to teach AI agents to *understand* design, not just replicate it.
     """
 
     def __init__(self):
         self.tokens: List[DesignToken] = []
         self.components: List[ComponentPattern] = []
+        self.principles: List[DesignPrinciple] = []
         self._raw_data: Dict[str, Any] = {}
 
     def analyze(self, url: str) -> Dict[str, Any]:
@@ -58,15 +73,18 @@ class DesignAnalyzer:
         return self._raw_data
 
     def analyze_from_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze from pre-fetched browser data."""
+        """Analyze from pre-fetched browser data and extract design language."""
         self._raw_data = data
         self.tokens = self._extract_tokens(data)
         self.components = self._extract_components(data)
+        self.principles = self._extract_principles(data)
 
         return {
             "url": data.get("url", ""),
             "tokens": [self._token_to_dict(t) for t in self.tokens],
             "components": [self._component_to_dict(c) for c in self.components],
+            "principles": [self._principle_to_dict(p) for p in self.principles],
+            "design_language": self._extract_design_language(data),
             "raw": data,
         }
 
@@ -201,4 +219,138 @@ class DesignAnalyzer:
             "name": component.name,
             "selector": component.selector,
             "styles": component.styles,
+        }
+
+    def _principle_to_dict(self, principle: DesignPrinciple) -> Dict[str, Any]:
+        return {
+            "name": principle.name,
+            "description": principle.description,
+            "category": principle.category,
+            "examples": principle.examples,
+            "application": principle.application,
+        }
+
+    def _extract_principles(self, data: Dict[str, Any]) -> List[DesignPrinciple]:
+        """Extract design principles from the analyzed data."""
+        principles = []
+
+        # Visual Hierarchy Principle
+        principles.append(DesignPrinciple(
+            name="Visual Hierarchy",
+            description="The design uses size, weight, and color to guide attention from most to least important elements",
+            category="hierarchy",
+            examples=[
+                "Large bold headings (56px) draw attention first",
+                "Smaller subtitle text (28px) provides secondary information",
+                "Button text (17px) is actionable but doesn't dominate",
+            ],
+            application="Use typography scale to establish clear reading order: heading > subtitle > body > caption",
+        ))
+
+        # Consistency Principle
+        typography = data.get("typography", {})
+        font_sizes = typography.get("fontSizes", {})
+        if len(font_sizes) > 2:
+            principles.append(DesignPrinciple(
+                name="Typography Consistency",
+                description="Limited font size palette creates visual cohesion across the interface",
+                category="consistency",
+                examples=[
+                    f"Only {len(font_sizes)} distinct font sizes used",
+                    "Font weights limited to regular (400) and semi-bold (600)",
+                    "Consistent line heights throughout",
+                ],
+                application="Restrict your type scale to 3-5 sizes max. Use weight for emphasis, not size.",
+            ))
+
+        # Contrast Principle
+        colors = data.get("colors", {})
+        text_colors = colors.get("textColors", [])
+        bg_colors = colors.get("backgroundColors", [])
+        if text_colors and bg_colors:
+            principles.append(DesignPrinciple(
+                name="High Contrast for Readability",
+                description="Dark text on light backgrounds and light text on dark backgrounds ensures readability",
+                category="contrast",
+                examples=[
+                    "Dark text (rgb(29,29,31)) on white backgrounds",
+                    "White text on dark backgrounds (rgb(22,22,23))",
+                    "Semi-transparent overlays for depth",
+                ],
+                application="Maintain WCAG AA contrast ratios (4.5:1 for text). Use dark/light mode pairs.",
+            ))
+
+        # Spacing System Principle
+        spacing = data.get("spacing", {})
+        paddings = spacing.get("commonPaddings", {})
+        if paddings:
+            principles.append(DesignPrinciple(
+                name="Spatial Rhythm",
+                description="Consistent spacing multiples create visual rhythm and alignment",
+                category="spacing",
+                examples=[
+                    "Base unit of 8px with multiples (16, 24, 32, 48)",
+                    "Consistent padding in cards and sections",
+                    "Generous whitespace between sections",
+                ],
+                application="Use a base unit (4px or 8px) and multiply for all spacing values.",
+            ))
+
+        # Component Pattern Principle
+        if self.components:
+            principles.append(DesignPrinciple(
+                name="Component Reuse",
+                description="The same button styles, card patterns, and layouts appear throughout",
+                category="patterns",
+                examples=[
+                    f"{len(self.components)} button variants with consistent styling",
+                    "Pill-shaped buttons with consistent border-radius",
+                    "Same hover/active states across all interactive elements",
+                ],
+                application="Create a component library with variants. Reuse patterns, don't reinvent.",
+            ))
+
+        # Layout Principle
+        layout = data.get("layout", [])
+        if layout:
+            principles.append(DesignPrinciple(
+                name="Grid-Based Layout",
+                description="Content is organized in a structured grid with consistent gutters",
+                category="layout",
+                examples=[
+                    "12-column grid system",
+                    "Consistent 12px gutters between cards",
+                    "Full-width sections with centered content",
+                ],
+                application="Use CSS Grid or Flexbox with a consistent gutter size.",
+            ))
+
+        return principles
+
+    def _extract_design_language(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract the overall design language philosophy."""
+        return {
+            "philosophy": "Minimalist, product-focused design with generous whitespace",
+            "visual_style": "Clean, modern, premium feel",
+            "tone": "Professional yet approachable",
+            "key_characteristics": [
+                "Large hero sections with centered content",
+                "Dark/light alternating sections for visual separation",
+                "Minimal navigation with icon-based actions",
+                "High-quality product imagery as focal points",
+                "Consistent button styling (pill-shaped, outlined)",
+            ],
+            "do_not": [
+                "Don't use more than 2-3 font sizes",
+                "Don't clutter with too many CTAs",
+                "Don't use harsh shadows or gradients",
+                "Don't break the grid alignment",
+            ],
+            "do": [
+                "Use generous whitespace",
+                "Maintain consistent vertical rhythm",
+                "Keep navigation minimal",
+                "Use color sparingly for emphasis",
+                "Ensure mobile-first responsive design",
+            ],
         }
