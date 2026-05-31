@@ -145,15 +145,34 @@ def main():
     engine.extractor.write_documentation(design_system, ds_path)
     print(f"  - Design system: {ds_path}")
 
-    # Phase 5: Optimize (optional)
+    # Phase 5: Generate Design Variants (optional)
     if config.enable_optimization:
-        print("\n[Phase 5] Creative optimization...")
-        variants = engine.optimizer.brainstorm(design_data)
-        evaluated = engine.optimizer.evaluate(variants, design_data)
-        best = engine.optimizer.select_best(evaluated)
+        print("\n[Phase 5] Generating design variants...")
+        base_html = engine.builder.build(design_data)
+        variants = engine.optimizer.generate_variants(design_data, base_html)
+        print(f"  - Generated {len(variants)} variants: {[v.name for v in variants]}")
+
+        # Evaluate variants
+        print("\n[Phase 6] Evaluating variants...")
+        evaluations = engine.optimizer.evaluate_variants(variants, design_data)
+
+        # Pick best
+        best = engine.optimizer.pick_best(evaluations)
         if best:
-            print(f"  - Best variant: {best['name']} (score: {best['score']:.2f})")
-            print(f"  - {best['recommendation']}")
+            print(f"  - Best variant: {best.variant.name}")
+            print(f"  - Total score: {best.total_score:.2f}")
+            print(f"  - Pros: {', '.join(best.pros)}")
+            print(f"  - Cons: {', '.join(best.cons)}")
+
+            # Apply best variant
+            result = engine.optimizer.apply_best(best, engine.sandbox_dir)
+            if result:
+                print(f"  - Applied to: {result['html']}")
+
+        # Show all ranked
+        print("\n  All variants ranked:")
+        for i, eval in enumerate(engine.optimizer.get_all_ranked(evaluations), 1):
+            print(f"  {i}. {eval.variant.name} - Score: {eval.total_score:.2f}")
 
     print("\n" + "=" * 60)
     print("Workflow complete!")
@@ -163,7 +182,6 @@ def main():
     print("\nGenerated files:")
     print(f"  - {output_path}")
     print(f"  - {ds_path}")
-    print(f"  - {engine.output_dir / 'optimizations.json'}")
 
     return 0
 

@@ -151,12 +151,28 @@ class ADEAEngine:
         return output_path
 
     def _phase4_optimize(self, design_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Phase 4: Creative optimization."""
-        variants = self.optimizer.brainstorm(design_data)
-        evaluated = self.optimizer.evaluate(variants, design_data)
-        best = self.optimizer.select_best(evaluated)
+        """Phase 4: Generate multiple design variants and pick the best."""
+        # Get base HTML from builder
+        base_html = self.builder.build(design_data)
 
+        # Generate multiple design variants
+        print("[ADEA] Generating design variants...")
+        variants = self.optimizer.generate_variants(design_data, base_html)
+        print(f"[ADEA] Generated {len(variants)} variants: {[v.name for v in variants]}")
+
+        # Evaluate all variants
+        print("[ADEA] Evaluating variants...")
+        evaluations = self.optimizer.evaluate_variants(variants, design_data)
+
+        # Pick the best variant
+        best = self.optimizer.pick_best(evaluations)
+        print(f"[ADEA] Best variant: {best.variant.name} (score: {best.total_score:.2f})")
+
+        # Apply the best variant
         if best:
-            self.optimizer.apply(best, self.sandbox_dir)
+            result = self.optimizer.apply_best(best, self.sandbox_dir)
+            if result:
+                print(f"[ADEA] Applied variant to {result['html']}")
 
-        return evaluated
+        # Return all ranked evaluations
+        return self.optimizer.get_all_ranked(evaluations)
